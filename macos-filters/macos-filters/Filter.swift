@@ -9,17 +9,29 @@
 import Foundation
 import CoreImage
 
-struct Filter {
+// Any properties that are bound to the UI will have to be @objc dynamic
+class Filter: NSObject {
     
-    var filter: CIFilter
-    var attributes: [Attribute]
+    init(filter: CIFilter, attributes: [Attribute]? = nil) {
+        self.filter = filter
+        self.attributes = attributes
+    }
+    
+    @objc dynamic var filter: CIFilter
+    @objc dynamic var attributes: [Attribute]?
     
 }
 
-struct Attribute {
+class Attribute: NSObject {
     
-    var name: String
-    var minValue: Int
-    var maxValue: Int
+    init(name: String, minValue: Int, maxValue: Int) {
+        self.name = name
+        self.minValue = minValue
+        self.maxValue = maxValue
+    }
+    
+    @objc dynamic var name: String
+    @objc dynamic var minValue: Int
+    @objc dynamic var maxValue: Int
     
 }
