@@ -35,4 +35,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension Notification.Name {
     static let imageWasOpened = Notification.Name("imageWasOpened")
+    static let attributeValueDidChange = Notification.Name("attributeValueDidChange")
 }

@@ -34,6 +34,10 @@ class Attribute: NSObject {
     @objc dynamic var name: String
     @objc dynamic var minValue: Double
     @objc dynamic var maxValue: Double
-    @objc dynamic var defaultValue: Double
+    @objc dynamic var defaultValue: Double {
+        didSet {
+            NotificationCenter.default.post(name: .attributeValueDidChange, object: nil, userInfo: ["attributeValue": defaultValue, "attribute" : self])
+        }
+    }
     
 }

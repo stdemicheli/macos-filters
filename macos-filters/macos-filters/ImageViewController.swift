@@ -40,12 +40,22 @@ class ImageViewController: NSViewController, NSTableViewDelegate {
         }
         imageController.add(contentsOf: filters)
         NotificationCenter.default.addObserver(self, selector: #selector(onDidOpenImage(_:)), name: .imageWasOpened, object: nil)
+        
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(onChangedAttributeValue(_:)), name: .attributeValueDidChange, object: nil)
     }
     
     @objc func onDidOpenImage(_ notification: Notification) {
         guard let imageUrl = notification.userInfo?["imageUrl"] as? URL else { return }
         
         imageView.image = NSImage(byReferencing: imageUrl)
+    }
+    
+    @objc func onChangedAttributeValue(_ notification: Notification) {
+        guard let attributeValue = notification.userInfo?["attributeValue"] as? Double, let attribute = notification.userInfo?["attribute"] as? Attribute else { return }
+        
+        print(attributeValue)
+        print(attribute)
     }
     
     func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool {
@@ -65,7 +75,8 @@ class ImageViewController: NSViewController, NSTableViewDelegate {
             filterController.add(contentsOf: attributes)
             return true
         } else if tableView.identifier == attributesTableViewId {
-            
+//            let attributes = filterController.content as! [Attribute]
+//            let attribute = attributes[row]
             return true
         } else {
             return false
