@@ -24,14 +24,16 @@ class Filter: NSObject {
 
 class Attribute: NSObject {
     
-    init(name: String, minValue: Int, maxValue: Int) {
+    init(name: String, minValue: Double, maxValue: Double, defaultValue: Double) {
         self.name = name
         self.minValue = minValue
         self.maxValue = maxValue
+        self.defaultValue = defaultValue
     }
     
     @objc dynamic var name: String
-    @objc dynamic var minValue: Int
-    @objc dynamic var maxValue: Int
+    @objc dynamic var minValue: Double
+    @objc dynamic var maxValue: Double
+    @objc dynamic var defaultValue: Double
     
 }
