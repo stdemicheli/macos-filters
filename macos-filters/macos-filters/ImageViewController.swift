@@ -10,6 +10,11 @@ import Cocoa
 
 class ImageViewController: NSViewController, NSTableViewDelegate {
 
+    var originalImage: NSImage? {
+        didSet {
+            imageView.image = originalImage
+        }
+    }
     @IBOutlet weak var imageView: NSImageView!
     @IBOutlet weak var filterTableView: NSTableView!
     let filterTableViewId = NSUserInterfaceItemIdentifier(rawValue: "filterTableView")
@@ -17,12 +22,11 @@ class ImageViewController: NSViewController, NSTableViewDelegate {
     let attributesTableViewId = NSUserInterfaceItemIdentifier(rawValue: "attributesTableView")
     
     @IBOutlet var imageController: NSArrayController!
-    // Add attributes of filters
     @IBOutlet var filterController: NSArrayController!
     
     @objc dynamic var filters = [Filter]()
-    // @objc dynamic var attributes = [Attribute]()
     var ciFilters = [CIFilter(name: "CIGaussianBlur")!, CIFilter(name: "CIColorControls")!]
+    private let context = CIContext(options: nil)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,23 +43,26 @@ class ImageViewController: NSViewController, NSTableViewDelegate {
             //filterController.add(contentsOf: ciFilter.inputKeys)
         }
         imageController.add(contentsOf: filters)
+        
         NotificationCenter.default.addObserver(self, selector: #selector(onDidOpenImage(_:)), name: .imageWasOpened, object: nil)
-        
-        
         NotificationCenter.default.addObserver(self, selector: #selector(onChangedAttributeValue(_:)), name: .attributeValueDidChange, object: nil)
     }
     
     @objc func onDidOpenImage(_ notification: Notification) {
         guard let imageUrl = notification.userInfo?["imageUrl"] as? URL else { return }
         
-        imageView.image = NSImage(byReferencing: imageUrl)
+        originalImage = NSImage(byReferencing: imageUrl)
     }
     
     @objc func onChangedAttributeValue(_ notification: Notification) {
-        guard let attributeValue = notification.userInfo?["attributeValue"] as? Double, let attribute = notification.userInfo?["attribute"] as? Attribute else { return }
+        guard let attributeValue = notification.userInfo?["attributeValue"] as? Double,
+            let attribute = notification.userInfo?["attribute"] as? Attribute,
+            let filter = notification.userInfo?["filter"] as? CIFilter,
+            let image = originalImage else { return }
         
-        print(attributeValue)
-        print(attribute)
+        if let filteredImage = self.image(byFiltering: image, with: filter, attribute: attribute.name, attributeValue: attributeValue) {
+            imageView?.image = filteredImage
+        }
     }
     
     func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool {
@@ -69,7 +76,7 @@ class ImageViewController: NSViewController, NSTableViewDelegate {
                     let minValue = attribute[kCIAttributeSliderMin] as? Double,
                     let maxValue = attribute[kCIAttributeSliderMax] as? Double,
                     let defaultValue = attribute[kCIAttributeDefault] as? Double {
-                    attributes.append(Attribute(name: input, minValue: minValue, maxValue: maxValue, defaultValue: defaultValue))
+                    attributes.append(Attribute(name: input, minValue: minValue, maxValue: maxValue, defaultValue: defaultValue, filter: filter))
                 }
             }
             filterController.add(contentsOf: attributes)
@@ -83,4 +90,22 @@ class ImageViewController: NSViewController, NSTableViewDelegate {
         }
     }
     
+    // MARK: - Private
+    
+    private func image(byFiltering image: NSImage, with filter: CIFilter, attribute: String, attributeValue: Double) -> NSImage? {
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return image }
+        let ciImage = CIImage(cgImage: cgImage)
+        
+        filter.setValue(ciImage, forKey: kCIInputImageKey)
+        filter.setValue(attributeValue, forKey: attribute)
+        
+        guard let outputCIImage = filter.outputImage,
+            let outputCGImage = context.createCGImage(outputCIImage, from: outputCIImage.extent)
+            else {
+                return nil
+        }
+    
+        return NSImage(cgImage: outputCGImage, size: imageView.intrinsicContentSize)
+    }
+
 }

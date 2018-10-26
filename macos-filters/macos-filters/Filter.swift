@@ -24,19 +24,23 @@ class Filter: NSObject {
 
 class Attribute: NSObject {
     
-    init(name: String, minValue: Double, maxValue: Double, defaultValue: Double) {
+    init(name: String, minValue: Double, maxValue: Double, defaultValue: Double, filter: CIFilter) {
         self.name = name
+        self.filter = filter
         self.minValue = minValue
         self.maxValue = maxValue
         self.defaultValue = defaultValue
     }
     
     @objc dynamic var name: String
+    @objc dynamic var filter: CIFilter
     @objc dynamic var minValue: Double
     @objc dynamic var maxValue: Double
     @objc dynamic var defaultValue: Double {
         didSet {
-            NotificationCenter.default.post(name: .attributeValueDidChange, object: nil, userInfo: ["attributeValue": defaultValue, "attribute" : self])
+            NotificationCenter.default.post(name: .attributeValueDidChange, object: nil, userInfo: ["attributeValue": defaultValue,
+                                                                                                    "attribute" : self,
+                                                                                                    "filter": filter])
         }
     }
     
